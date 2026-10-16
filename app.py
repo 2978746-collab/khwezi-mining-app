@@ -19,15 +19,10 @@ st.divider()
 
 # --- EQUIPMENT DATABASE AND MONITORING ---
 
-equipment = pd.DataFrame({
-    "Equipment_ID": ["TRK-001", "TRK-002", "DRL-001"],
-    "Equipment_Type": ["Haul Truck", "Haul Truck", "Drill"],
-    "Operating_Hours": [1250, 1680, 2300],
-    "Temperature_C": [72, 85, 108],
-    "Vibration_mm_s": [3.2, 5.7, 8.7],
-    "Downtime_Hours": [25, 45, 140],
-    "Maintenance_Status": ["Operational", "Due", "Overdue"]
-})
+
+# Load equipment records from CSV
+equipment = pd.read_csv("equipment.csv", sep=";")
+
 
 def check_temperature(value):
     if value < 80:
