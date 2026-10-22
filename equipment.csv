@@ -1,0 +1,13 @@
+﻿Equipment_ID;Equipment_Type;Manufacturer;Operating_Hours;Temperature_C;Vibration_mm_s;Fuel_Consumption_L_h;Brake_Status;Tyre_Status;Engine_Status;Maintenance_Status;Downtime_Hours
+TRK-001;Haul Truck;Caterpillar;1250;72;3.2;48;Good;Good;Normal;Operational;25
+TRK-002;Haul Truck;Komatsu;1680;85;5.7;52;Good;Worn;Normal;Due;45
+TRK-003;Haul Truck;Caterpillar;2100;105;9.1;58;Worn;Worn;Warning;Overdue;120
+EXC-001;Excavator;Hitachi;1450;78;4.3;35;Good;N/A;Normal;Operational;30
+EXC-002;Excavator;Komatsu;1950;94;6.8;38;Good;N/A;Warning;Due;70
+DRL-001;Drill;Epiroc;1320;76;4.8;22;Good;N/A;Normal;Operational;20
+DRL-002;Drill;Sandvik;2300;108;8.7;25;Good;N/A;Critical;Overdue;140
+LDR-001;Loader;Caterpillar;1600;82;5.3;32;Good;Good;Normal;Due;50
+BDZ-001;Bulldozer;Komatsu;1750;88;6.1;30;Good;Good;Normal;Operational;40
+CRS-001;Crusher;Metso;2800;102;8.4;0;N/A;N/A;Warning;Under Maintenance;180
+CNV-001;Conveyor;Siemens;3200;74;3.7;0;N/A;N/A;Normal;Operational;35
+CNV-002;Conveyor;Siemens;3500;98;7.4;0;N/A;N/A;Warning;Due;95

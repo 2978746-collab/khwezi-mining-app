@@ -17,6 +17,53 @@ st.title("⛏️ Khwezi Mining Health, Safety & Equipment Monitoring Application
 st.markdown("*A centralized digital monitoring platform for operational decision-making.*")
 st.divider()
 
+# --- EQUIPMENT DATABASE AND MONITORING ---
+
+
+# Load equipment records from CSV
+equipment = pd.read_csv("equipment.csv", sep=";")
+
+
+def check_temperature(value):
+    if value < 80:
+        return "NORMAL"
+    elif value <= 100:
+        return "WARNING"
+    else:
+        return "CRITICAL"
+
+def check_vibration(value):
+    if value < 5:
+        return "NORMAL"
+    elif value <= 8:
+        return "WARNING"
+    else:
+        return "CRITICAL"
+
+def calculate_availability(operating_hours, downtime_hours):
+    total = operating_hours + downtime_hours
+    if total == 0:
+        return 0.0
+    return round(operating_hours / total * 100, 2)
+
+def overall_condition(row):
+    statuses = [row["Temperature_Status"], row["Vibration_Status"]]
+    if "CRITICAL" in statuses:
+        return "CRITICAL"
+    elif "WARNING" in statuses:
+        return "WARNING"
+    return "NORMAL"
+
+equipment["Temperature_Status"] = equipment["Temperature_C"].apply(check_temperature)
+equipment["Vibration_Status"] = equipment["Vibration_mm_s"].apply(check_vibration)
+equipment["Overall_Condition"] = equipment.apply(overall_condition, axis=1)
+equipment["Availability_Percent"] = equipment.apply(
+    lambda row: calculate_availability(
+        row["Operating_Hours"], row["Downtime_Hours"]
+    ),
+    axis=1
+)
+
 # --- LOGIN PORTAL & RBAC (Section 3a & Table 1) ---
 if not st.session_state["logged_in"]:
     st.subheader("🔒 User Access Control Portal")
@@ -98,13 +145,64 @@ else:
         elif r_score <= 16: st.error("High Risk - Warning Triggered!")
         else: st.error("CRITICAL RISK - Immediate Action Required!")
 
+    
     elif selected_page == "Equipment Data":
         st.subheader("🚜 Equipment Database & Condition Monitoring")
-        st.write("Placeholder ready for Thembi's equipment parameters (Temp/Vibration thresholds).")
 
+        st.dataframe(equipment, use_container_width=True)
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Equipment", len(equipment))
+        c2.metric("Critical Equipment", (equipment["Overall_Condition"] == "CRITICAL").sum())
+        c3.metric("Average Availability", f"{equipment['Availability_Percent'].mean():.1f}%")
+
+        selected_id = st.selectbox(
+            "Select Equipment to Monitor",
+            equipment["Equipment_ID"].tolist()
+        )
+
+        selected = equipment[equipment["Equipment_ID"] == selected_id].iloc[0]
+
+        st.write(f"Temperature: {selected['Temperature_C']} °C — {selected['Temperature_Status']}")
+        st.write(f"Vibration: {selected['Vibration_mm_s']} mm/s — {selected['Vibration_Status']}")
+
+        if selected["Overall_Condition"] == "CRITICAL":
+            st.error("CRITICAL: Equipment requires immediate attention!")
+        elif selected["Overall_Condition"] == "WARNING":
+            st.warning("WARNING: Equipment condition requires monitoring.")
+        else:
+            st.success("Equipment operating within normal limits.")
+
+
+   
     elif selected_page == "Maintenance Data":
         st.subheader("🔧 Equipment Maintenance Monitoring")
-        st.write("Placeholder ready for Thembi's availability calculations and maintenance tracking.")
+
+        st.dataframe(
+            equipment[[
+                "Equipment_ID", "Operating_Hours", "Downtime_Hours",
+                "Availability_Percent", "Maintenance_Status"
+            ]],
+            use_container_width=True
+        )
+
+        for _, item in equipment.iterrows():
+            equipment_id = item["Equipment_ID"]
+            status = item["Maintenance_Status"]
+            availability = item["Availability_Percent"]
+            downtime = item["Downtime_Hours"]
+
+            if status in ["Overdue", "Under Maintenance"]:
+                st.error(f"{equipment_id}: Maintenance status is {status}.")
+            elif status == "Due":
+                st.warning(f"{equipment_id}: Maintenance is due.")
+
+            if availability < 90:
+                st.warning(f"{equipment_id}: Low availability ({availability}%).")
+
+            if downtime > 100:
+                st.warning(f"{equipment_id}: Excessive downtime ({downtime} hours).")
+
 
     elif selected_page == "Generate Reports":
         st.subheader("📄 Generate Operational Reports")
