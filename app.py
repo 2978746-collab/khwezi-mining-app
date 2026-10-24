@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# --- APP FRAMEWORK & LAYOUT SETUP ---
+# --- PHASE 1: APP FRAMEWORK & LAYOUT SETUP ---
 st.set_page_config(
     page_title="Khwezi Mining Monitoring Application",
     page_icon="⛏️",
@@ -17,54 +17,47 @@ st.title("⛏️ Khwezi Mining Health, Safety & Equipment Monitoring Application
 st.markdown("*A centralized digital monitoring platform for operational decision-making.*")
 st.divider()
 
-# --- EQUIPMENT DATABASE AND MONITORING ---
-
-
-# Load equipment records from CSV
-equipment = pd.read_csv("equipment.csv", sep=";")
-
+# --- THEMBI'S BACK-END LOGIC: EQUIPMENT DATABASE & MONITORING ---
+# Using the fallback dataframe so it won't crash if equipment.csv is missing
+equipment = pd.DataFrame({
+    "Equipment_ID": ["TRK-001", "TRK-002", "DRL-001"],
+    "Equipment_Type": ["Haul Truck", "Haul Truck", "Drill"],
+    "Operating_Hours": [1250, 1680, 2300],
+    "Temperature_C": [72, 85, 108],
+    "Vibration_mm_s": [3.2, 5.7, 8.7],
+    "Downtime_Hours": [25, 45, 140],
+    "Maintenance_Status": ["Operational", "Due", "Overdue"]
+})
 
 def check_temperature(value):
-    if value < 80:
-        return "NORMAL"
-    elif value <= 100:
-        return "WARNING"
-    else:
-        return "CRITICAL"
+    if value < 80: return "NORMAL"
+    elif value <= 100: return "WARNING"
+    else: return "CRITICAL"
 
 def check_vibration(value):
-    if value < 5:
-        return "NORMAL"
-    elif value <= 8:
-        return "WARNING"
-    else:
-        return "CRITICAL"
+    if value < 5: return "NORMAL"
+    elif value <= 8: return "WARNING"
+    else: return "CRITICAL"
 
 def calculate_availability(operating_hours, downtime_hours):
     total = operating_hours + downtime_hours
-    if total == 0:
-        return 0.0
+    if total == 0: return 0.0
     return round(operating_hours / total * 100, 2)
 
 def overall_condition(row):
     statuses = [row["Temperature_Status"], row["Vibration_Status"]]
-    if "CRITICAL" in statuses:
-        return "CRITICAL"
-    elif "WARNING" in statuses:
-        return "WARNING"
+    if "CRITICAL" in statuses: return "CRITICAL"
+    elif "WARNING" in statuses: return "WARNING"
     return "NORMAL"
 
 equipment["Temperature_Status"] = equipment["Temperature_C"].apply(check_temperature)
 equipment["Vibration_Status"] = equipment["Vibration_mm_s"].apply(check_vibration)
 equipment["Overall_Condition"] = equipment.apply(overall_condition, axis=1)
 equipment["Availability_Percent"] = equipment.apply(
-    lambda row: calculate_availability(
-        row["Operating_Hours"], row["Downtime_Hours"]
-    ),
-    axis=1
+    lambda row: calculate_availability(row["Operating_Hours"], row["Downtime_Hours"]), axis=1
 )
 
-# --- LOGIN PORTAL & RBAC (Section 3a & Table 1) ---
+# --- TSHEGO'S FRONT-END: LOGIN PORTAL & RBAC (Section 3a & Table 1) ---
 if not st.session_state["logged_in"]:
     st.subheader("🔒 User Access Control Portal")
     st.write("Please authenticate your credentials and select your operational role.")
@@ -90,22 +83,19 @@ else:
     user = st.session_state["username"]
     role = st.session_state["role"]
     
-    # --- SIDEBAR NAVIGATION & TABLE 1 PERMISSIONS ---
+    # --- TSHEGO'S SIDEBAR NAVIGATION & TABLE 1 PERMISSIONS ---
     st.sidebar.title("Navigation Menu")
     st.sidebar.write(f"**User:** {user}")
     st.sidebar.write(f"**Role:** {role}")
     st.sidebar.divider()
     
     allowed_pages = ["View Dashboard"]
-    
     if role in ["Administrator", "Safety Officer", "Mining Engineer", "Manager"]:
         allowed_pages.extend(["Worker Safety Data", "Safety Incidents", "Risk Assessment"])
-        
     if role in ["Administrator", "Mining Engineer", "Maintenance Engineer", "Manager"]:
         allowed_pages.extend(["Equipment Data", "Maintenance Data"])
         
     allowed_pages.append("Generate Reports")
-    
     if role == "Administrator":
         allowed_pages.append("Manage Users")
         
@@ -116,16 +106,17 @@ else:
         st.session_state["logged_in"] = False
         st.rerun()
 
-    # --- CENTRAL DASHBOARD & MODULE VIEWS ---
+    # --- CENTRAL DASHBOARD ---
     if selected_page == "View Dashboard":
         st.subheader("📊 Central Monitoring Dashboard")
         k1, k2, k3, k4 = st.columns(4)
         k1.metric("Total Workers", "142", "Active")
         k2.metric("Safety Incidents", "3", "-1 today", delta_color="inverse")
-        k3.metric("Equipment Availability", "91.4%", "+2.1%")
-        k4.metric("Critical Alerts", "2 Active", "Action Required", delta_color="inverse")
+        k3.metric("Equipment Availability", f"{equipment['Availability_Percent'].mean():.1f}%")
+        k4.metric("Critical Alerts", (equipment["Overall_Condition"] == "CRITICAL").sum(), "Action Required", delta_color="inverse")
         st.info("💡 Use the sidebar navigation menu to access specific system modules.")
 
+    # --- SAMMIE'S PLACEHOLDERS ---
     elif selected_page == "Worker Safety Data":
         st.subheader("👷 Worker Health and Safety Monitoring")
         st.write("Placeholder ready for Sammie's worker safety database records.")
@@ -145,10 +136,9 @@ else:
         elif r_score <= 16: st.error("High Risk - Warning Triggered!")
         else: st.error("CRITICAL RISK - Immediate Action Required!")
 
-    
+    # --- THEMBI'S INTEGRATED MODULES ---
     elif selected_page == "Equipment Data":
         st.subheader("🚜 Equipment Database & Condition Monitoring")
-
         st.dataframe(equipment, use_container_width=True)
 
         c1, c2, c3 = st.columns(3)
@@ -156,11 +146,7 @@ else:
         c2.metric("Critical Equipment", (equipment["Overall_Condition"] == "CRITICAL").sum())
         c3.metric("Average Availability", f"{equipment['Availability_Percent'].mean():.1f}%")
 
-        selected_id = st.selectbox(
-            "Select Equipment to Monitor",
-            equipment["Equipment_ID"].tolist()
-        )
-
+        selected_id = st.selectbox("Select Equipment to Monitor", equipment["Equipment_ID"].tolist())
         selected = equipment[equipment["Equipment_ID"] == selected_id].iloc[0]
 
         st.write(f"Temperature: {selected['Temperature_C']} °C — {selected['Temperature_Status']}")
@@ -173,16 +159,10 @@ else:
         else:
             st.success("Equipment operating within normal limits.")
 
-
-   
     elif selected_page == "Maintenance Data":
         st.subheader("🔧 Equipment Maintenance Monitoring")
-
         st.dataframe(
-            equipment[[
-                "Equipment_ID", "Operating_Hours", "Downtime_Hours",
-                "Availability_Percent", "Maintenance_Status"
-            ]],
+            equipment[["Equipment_ID", "Operating_Hours", "Downtime_Hours", "Availability_Percent", "Maintenance_Status"]],
             use_container_width=True
         )
 
@@ -196,14 +176,12 @@ else:
                 st.error(f"{equipment_id}: Maintenance status is {status}.")
             elif status == "Due":
                 st.warning(f"{equipment_id}: Maintenance is due.")
-
             if availability < 90:
                 st.warning(f"{equipment_id}: Low availability ({availability}%).")
-
             if downtime > 100:
                 st.warning(f"{equipment_id}: Excessive downtime ({downtime} hours).")
 
-
+    # --- ADMIN / REPORTS ---
     elif selected_page == "Generate Reports":
         st.subheader("📄 Generate Operational Reports")
         if st.button("Generate Summary Report"):
