@@ -1,0 +1,19 @@
+Incident_ID,Incident_Date,Worker_ID,Section,Shift,Incident_Type,Severity,Days_Lost,Reported_To_DMRE,Corrective_Action,Investigation_Status
+INC-001,2026-08-13,WRK-008,Open Pit,Night,Slip/Trip,Critical,6,Yes,Housekeeping and toolbox talk,Closed
+INC-002,2026-08-16,WRK-015,Open Pit,Day,Near Miss,High,3,Yes,Update risk assessment,Closed
+INC-003,2026-08-19,WRK-002,Open Pit,Night,Equipment Contact,Medium,0,No,Inspect equipment and retrain operator,Closed
+INC-004,2026-08-22,WRK-009,Open Pit,Day,Falling Object,Medium,0,No,Secure area and review controls,Closed
+INC-005,2026-08-25,WRK-016,Open Pit,Night,Vehicle Near Miss,Low,0,No,Review traffic management plan,Closed
+INC-006,2026-08-28,WRK-003,Open Pit,Day,Unsafe Condition,Critical,6,Yes,Isolate hazard and correct condition,Closed
+INC-007,2026-08-31,WRK-010,Open Pit,Night,Minor Cut,High,4,Yes,First aid and PPE review,Closed
+INC-008,2026-09-03,WRK-017,Open Pit,Day,Spillage,High,1,Yes,Contain spill and inspect area,Closed
+INC-009,2026-09-06,WRK-004,Open Pit,Night,Tool Incident,Medium,0,No,Inspect tools and reinforce procedure,Closed
+INC-010,2026-09-09,WRK-011,Open Pit,Day,Slip/Trip,Low,0,No,Housekeeping and toolbox talk,Closed
+INC-011,2026-09-12,WRK-018,Open Pit,Night,Near Miss,Critical,6,Yes,Update risk assessment,Open
+INC-012,2026-09-15,WRK-005,Open Pit,Day,Equipment Contact,Critical,7,Yes,Inspect equipment and retrain operator,Under Investigation
+INC-013,2026-09-18,WRK-012,Open Pit,Night,Falling Object,High,2,Yes,Secure area and review controls,Open
+INC-014,2026-09-21,WRK-019,Open Pit,Day,Vehicle Near Miss,Medium,0,No,Review traffic management plan,Open
+INC-015,2026-09-24,WRK-006,Open Pit,Night,Unsafe Condition,Low,0,No,Isolate hazard and correct condition,Under Investigation
+INC-016,2026-09-27,WRK-013,Open Pit,Day,Minor Cut,Low,0,No,First aid and PPE review,Open
+INC-017,2026-09-30,WRK-020,Open Pit,Night,Spillage,Critical,7,Yes,Contain spill and inspect area,Open
+INC-018,2026-10-03,WRK-007,Open Pit,Day,Tool Incident,High,3,Yes,Inspect tools and reinforce procedure,Under Investigation
