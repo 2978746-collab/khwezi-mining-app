@@ -119,11 +119,509 @@ else:
     # --- SAMMIE'S PLACEHOLDERS ---
     elif selected_page == "Worker Safety Data":
         st.subheader("👷 Worker Health and Safety Monitoring")
-        st.write("Placeholder ready for Sammie's worker safety database records.")
+        
+def create_file():
+    """Create the CSV file if it does not already exist."""
+    if not os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "w", newline="") as file:
+            writer = csv.writer(file)
+
+            writer.writerow([
+                "Worker_ID",
+                "Department",
+                "Job_Role",
+                "Shift",
+                "PPE_Compliance",
+                "Safety_Training",
+                "Fatigue_Level",
+                "Safety_Observations",
+                "Near_Misses",
+                "Previous_Incidents",
+                "Risk_Level"
+            ])
+
+
+def assess_worker_risk(ppe, training, fatigue,
+                       observations, near_misses, incidents):
+    """Identify potentially unsafe worker conditions."""
+
+    warnings = []
+
+    if ppe.lower() == "no":
+        warnings.append("Worker is not complying with PPE requirements.")
+
+    if training.lower() == "no":
+        warnings.append("Worker has not completed safety training.")
+
+    if fatigue >= 4:
+        warnings.append("High fatigue level detected.")
+
+    if observations >= 3:
+        warnings.append("Multiple safety observations recorded.")
+
+    if near_misses > 0:
+        warnings.append("Near-miss incidents have been reported.")
+
+    if incidents > 0:
+        warnings.append("Previous safety incidents recorded.")
+
+    # Determine the overall risk level.
+    if ppe.lower() == "no" or fatigue == 5:
+        risk_level = "Critical"
+
+    elif training.lower() == "no" or fatigue >= 4:
+        risk_level = "High"
+
+    elif observations >= 3 or near_misses > 0 or incidents > 0:
+        risk_level = "Medium"
+
+    else:
+        risk_level = "Low"
+
+    return risk_level, warnings
+
+
+def add_worker():
+    """Collect worker information and save it."""
+
+    print("\n--- Worker Safety Registration ---")
+
+    worker_id = input("Enter Worker ID: ").strip()
+    department = input("Enter Department: ").strip()
+    job_role = input("Enter Job Role: ").strip()
+
+    shift = input("Enter Shift (Day/Night): ").strip().title()
+
+    while shift not in ["Day", "Night"]:
+        print("Invalid shift. Enter Day or Night.")
+        shift = input("Enter Shift: ").strip().title()
+
+    ppe = input("Is the worker complying with PPE? (Yes/No): ")
+    while ppe.lower() not in ["yes", "no"]:
+        ppe = input("Enter Yes or No: ")
+
+    training = input("Has safety training been completed? (Yes/No): ")
+    while training.lower() not in ["yes", "no"]:
+        training = input("Enter Yes or No: ")
+
+    fatigue = int(input("Enter fatigue level (1-5): "))
+    while fatigue < 1 or fatigue > 5:
+        print("Fatigue must be between 1 and 5.")
+        fatigue = int(input("Enter fatigue level (1-5): "))
+
+    observations = int(input("Number of safety observations: "))
+    near_misses = int(input("Number of near misses: "))
+    incidents = int(input("Number of previous incidents: "))
+
+    if observations < 0 or near_misses < 0 or incidents < 0:
+        print("Counts cannot be negative.")
+        return
+
+    risk_level, warnings = assess_worker_risk(
+        ppe,
+        training,
+        fatigue,
+        observations,
+        near_misses,
+        incidents
+    )
+
+    # Save the worker's information.
+    with open(FILE_NAME, "a", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerow([
+            worker_id,
+            department,
+            job_role,
+            shift,
+            ppe.title(),
+            training.title(),
+            fatigue,
+            observations,
+            near_misses,
+            incidents,
+            risk_level
+        ])
+
+    print("\nWorker information saved successfully.")
+    print("Worker risk level:", risk_level)
+
+    if warnings:
+        print("\nSAFETY WARNINGS:")
+
+        for warning in warnings:
+            print("-", warning)
+
+    else:
+        print("No unsafe conditions identified.")
+
+
+def view_workers():
+    """Display all registered workers."""
+
+    with open(FILE_NAME, "r", newline="") as file:
+        reader = csv.reader(file)
+
+        for row in reader:
+            print(row)
+
+
+def main():
+    create_file()
+
+    while True:
+        print("\n=== WORKER SAFETY MONITORING ===")
+        print("1. Register worker")
+        print("2. View worker records")
+        print("3. Exit")
+
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            add_worker()
+
+        elif choice == "2":
+            view_workers()
+
+        elif choice == "3":
+            print("Exiting worker safety monitoring.")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+
+if __name__ == "__main__":
+    main()
 
     elif selected_page == "Safety Incidents":
         st.subheader("🚨 Safety Incident Database")
-        st.write("Placeholder ready for Sammie's safety incident tracking repository.")
+        FILE_NAME = "safety_incidents.csv"
+
+FIELDS = [
+    "Incident_ID",
+    "Date",
+    "Time",
+    "Shift",
+    "Location",
+    "Department",
+    "Incident_Type",
+    "Severity",
+    "Injury_Status",
+    "Lost_Time_Injury",
+    "Cause",
+    "Corrective_Action",
+    "Incident_Status"
+]
+
+
+def create_file():
+    """Create the incident database if necessary."""
+
+    if not os.path.exists(FILE_NAME):
+        with open(FILE_NAME, "w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=FIELDS)
+            writer.writeheader()
+
+
+def load_incidents():
+    """Load all incident records from the CSV file."""
+
+    with open(FILE_NAME, "r", newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def add_incident():
+    """Record a new safety incident."""
+
+    print("\n--- Add Safety Incident ---")
+
+    incidents = load_incidents()
+
+    incident_id = input("Enter Incident ID: ").strip()
+
+    if not incident_id:
+        print("Incident ID cannot be empty.")
+        return
+
+    if any(row["Incident_ID"] == incident_id for row in incidents):
+        print("This Incident ID already exists.")
+        return
+
+    date = input("Enter date (YYYY-MM-DD): ").strip()
+
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        print("Invalid date format.")
+        return
+
+    time = input("Enter time (HH:MM): ").strip()
+
+    try:
+        datetime.strptime(time, "%H:%M")
+    except ValueError:
+        print("Invalid time format.")
+        return
+
+    shift = input("Enter shift (Day/Night): ").strip().title()
+
+    if shift not in ["Day", "Night"]:
+        print("Invalid shift.")
+        return
+
+    location = input("Enter incident location: ").strip()
+    department = input("Enter department: ").strip()
+
+    incident_type = input(
+        "Enter incident type (e.g. fall, machinery, fire, near miss): "
+    ).strip()
+
+    severity = input(
+        "Enter severity (Low/Medium/High/Critical): "
+    ).strip().title()
+
+    if severity not in ["Low", "Medium", "High", "Critical"]:
+        print("Invalid severity.")
+        return
+
+    injury_status = input(
+        "Was there an injury? (Yes/No): "
+    ).strip().title()
+
+    if injury_status not in ["Yes", "No"]:
+        print("Enter Yes or No.")
+        return
+
+    lti = input(
+        "Was it a lost-time injury? (Yes/No): "
+    ).strip().title()
+
+    if lti not in ["Yes", "No"]:
+        print("Enter Yes or No.")
+        return
+
+    cause = input("Enter cause of incident: ").strip()
+
+    corrective_action = input(
+        "Enter corrective action: "
+    ).strip()
+
+    incident_status = input(
+        "Enter status (Open/Under Investigation/Closed): "
+    ).strip().title()
+
+    valid_statuses = [
+        "Open",
+        "Under Investigation",
+        "Closed"
+    ]
+
+    if incident_status not in valid_statuses:
+        print("Invalid incident status.")
+        return
+
+    record = {
+        "Incident_ID": incident_id,
+        "Date": date,
+        "Time": time,
+        "Shift": shift,
+        "Location": location,
+        "Department": department,
+        "Incident_Type": incident_type,
+        "Severity": severity,
+        "Injury_Status": injury_status,
+        "Lost_Time_Injury": lti,
+        "Cause": cause,
+        "Corrective_Action": corrective_action,
+        "Incident_Status": incident_status
+    }
+
+    with open(FILE_NAME, "a", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=FIELDS)
+        writer.writerow(record)
+
+    print("Incident recorded successfully.")
+
+    if severity in ["High", "Critical"]:
+        print("WARNING: High-severity incident requires attention.")
+
+
+def view_incidents():
+    """Display all incidents."""
+
+    incidents = load_incidents()
+
+    if not incidents:
+        print("No incidents have been recorded.")
+        return
+
+    for incident in incidents:
+        print(incident)
+
+
+def search_incident():
+    """Search for an incident by its ID."""
+
+    incident_id = input("Enter Incident ID to search: ").strip()
+
+    incidents = load_incidents()
+
+    for incident in incidents:
+        if incident["Incident_ID"] == incident_id:
+            print("\nIncident found:")
+            print(incident)
+            return
+
+    print("Incident not found.")
+
+
+def filter_incidents():
+    """Filter incidents by department, shift or severity."""
+
+    incidents = load_incidents()
+
+    if not incidents:
+        print("No incident records available.")
+        return
+
+    print("Filter by:")
+    print("1. Department")
+    print("2. Shift")
+    print("3. Severity")
+
+    choice = input("Select filter: ")
+
+    if choice == "1":
+        field = "Department"
+        value = input("Enter department: ").strip().lower()
+
+    elif choice == "2":
+        field = "Shift"
+        value = input("Enter shift: ").strip().lower()
+
+    elif choice == "3":
+        field = "Severity"
+        value = input("Enter severity: ").strip().lower()
+
+    else:
+        print("Invalid choice.")
+        return
+
+    results = [
+        incident for incident in incidents
+        if incident[field].lower() == value
+    ]
+
+    print("\nFiltered incidents:")
+
+    if results:
+        for incident in results:
+            print(incident)
+    else:
+        print("No matching incidents found.")
+
+
+def analyse_incidents():
+    """Count incidents and analyse basic trends."""
+
+    incidents = load_incidents()
+
+    if not incidents:
+        print("No incidents available for analysis.")
+        return
+
+    print("\nTotal incidents:", len(incidents))
+
+    severity_counts = Counter(
+        incident["Severity"] for incident in incidents
+    )
+
+    department_counts = Counter(
+        incident["Department"] for incident in incidents
+    )
+
+    shift_counts = Counter(
+        incident["Shift"] for incident in incidents
+    )
+
+    type_counts = Counter(
+        incident["Incident_Type"] for incident in incidents
+    )
+
+    total_near_misses = sum(
+        1 for incident in incidents
+        if "near miss" in incident["Incident_Type"].lower()
+    )
+
+    high_critical = sum(
+        1 for incident in incidents
+        if incident["Severity"] in ["High", "Critical"]
+    )
+
+    lost_time_injuries = sum(
+        1 for incident in incidents
+        if incident["Lost_Time_Injury"] == "Yes"
+    )
+
+    print("\nIncidents by severity:", dict(severity_counts))
+    print("Incidents by department:", dict(department_counts))
+    print("Incidents by shift:", dict(shift_counts))
+    print("Incidents by type:", dict(type_counts))
+    print("Total near misses:", total_near_misses)
+    print("High/Critical incidents:", high_critical)
+    print("Lost-time injuries:", lost_time_injuries)
+
+    print("\nMonthly incident trends:")
+
+    monthly_counts = Counter(
+        incident["Date"][:7] for incident in incidents
+    )
+
+    for month, count in sorted(monthly_counts.items()):
+        print(month, ":", count, "incident(s)")
+
+
+def main():
+    create_file()
+
+    while True:
+        print("\n=== SAFETY INCIDENT DATABASE ===")
+        print("1. Add incident")
+        print("2. View incidents")
+        print("3. Search incident")
+        print("4. Filter incidents")
+        print("5. Analyse incidents")
+        print("6. Exit")
+
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            add_incident()
+
+        elif choice == "2":
+            view_incidents()
+
+        elif choice == "3":
+            search_incident()
+
+        elif choice == "4":
+            filter_incidents()
+
+        elif choice == "5":
+            analyse_incidents()
+
+        elif choice == "6":
+            print("Exiting incident database.")
+            break
+
+        else:
+            print("Invalid choice. Try again.")
+
+
+if __name__ == "__main__":
+    main()
 
     elif selected_page == "Risk Assessment":
         st.subheader("⚠️ Risk Assessment Matrix (Likelihood × Consequence)")
